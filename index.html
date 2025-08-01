@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SafeScape</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="manifest" href="manifest.json" />
+    <script defer src="script.js"></script>
+    <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+
+<body>
+    <header>
+        <h1>🛡️ SafeScape</h1>
+        <p>See danger before you walk. Stay safe, even offline.</p>
+    </header>
+
+    <main>
+        <div id="filterBar">
+            <label for="filterType">Filter:</label>
+            <select id="filterType">
+                <option value="All">All</option>
+                <option value="Harassment">Harassment</option>
+                <option value="Dark Area">Dark Area</option>
+                <option value="Broken Road">Broken Road</option>
+                <option value="Unsafe Crowd">Unsafe Crowd</option>
+            </select>
+        </div>
+
+        <div id="map"></div>
+        <button id="reportBtn">+ Report Danger</button>
+    </main>
+
+    <div id="reportModal" class="hidden">
+        <div class="modal-content">
+            <h2>Report a Dangerous Spot</h2>
+            <label>Type:
+                <select id="dangerType">
+                    <option>Harassment</option>
+                    <option>Dark Area</option>
+                    <option>Broken Road</option>
+                    <option>Unsafe Crowd</option>
+                </select>
+            </label>
+            <label>Description:
+                <textarea id="dangerDesc" placeholder="Optional..."></textarea>
+            </label>
+            <button id="submitReport" type="button">Submit</button>
+            <button id="closeModal" type="button">Cancel</button>
+        </div>
+    </div>
+
+</body>
+
+</html>
