@@ -1,58 +1,1910 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SafeScape</title>
-    <link rel="stylesheet" href="style.css" />
-    <link rel="manifest" href="manifest.json" />
-    <script defer src="script.js"></script>
-    <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-</head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeScape Pro - Advanced Safety Navigation</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-geosearch@3.0.0/dist/geosearch.css">
+    <link rel="manifest" href="manifest.json">
+    <style>
+        :root {
+            --primary: #ff4da6;
+            --primary-dark: #e04393;
+            --secondary: #6c5ce7;
+            --dark: #2d3436;
+            --light: #f5f6fa;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --safe: #2ecc71;
+            --police: #3498db;
+            --hospital: #9b59b6;
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --text: #333;
+            --text-light: #636e72;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            --map-tile-light: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+            --map-tile-dark: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+            --glass-bg: rgba(255, 255, 255, 0.85);
+            --glass-border: 1px solid rgba(255, 255, 255, 0.3);
+        }
 
+        .dark-mode {
+            --primary: #ff7eb9;
+            --primary-dark: #ff4da6;
+            --secondary: #a18eff;
+            --dark: #f5f6fa;
+            --light: #2d3436;
+            --card-bg: rgba(45, 52, 54, 0.95);
+            --text: #f5f6fa;
+            --text-light: #b2bec3;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            --glass-bg: rgba(45, 52, 54, 0.85);
+            --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--light);
+            color: var(--text);
+            transition: var(--transition);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+            position: relative;
+            box-shadow: var(--shadow);
+            z-index: 100;
+            animation: fadeInDown 0.8s ease;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .logo i {
+            font-size: 2.2rem;
+        }
+
+        .theme-toggle {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+            backdrop-filter: blur(5px);
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(30deg);
+        }
+
+        .menu-toggle {
+            display: none;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: var(--transition);
+            backdrop-filter: blur(5px);
+        }
+
+        .tagline {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-top: 0.5rem;
+            flex-basis: 100%;
+        }
+
+        .container {
+            max-width: 100vw;
+            height: calc(100vh - 82px);
+            display: grid;
+            grid-template-columns: 350px 1fr;
+        }
+
+        .sidebar {
+            background: var(--glass-bg);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            overflow-y: auto;
+            transition: var(--transition);
+            z-index: 50;
+            backdrop-filter: blur(10px);
+            border-right: var(--glass-border);
+        }
+
+        .map-section {
+            position: relative;
+            transition: var(--transition);
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
+            z-index: 1;
+        }
+
+        .stats-card {
+            background: linear-gradient(135deg, var(--secondary), var(--primary));
+            color: white;
+            padding: 1.2rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            animation: fadeIn 0.8s ease 0.2s backwards;
+            box-shadow: var(--shadow);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            opacity: 0.9;
+        }
+
+        .filter-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .filter-section h3 {
+            margin-bottom: 0.8rem;
+            font-size: 1rem;
+            color: var(--text-light);
+        }
+
+        select, input {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border-radius: 10px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            background: var(--glass-bg);
+            color: var(--text);
+            font-size: 1rem;
+            transition: var(--transition);
+            backdrop-filter: blur(5px);
+            box-shadow: var(--shadow);
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(255, 77, 166, 0.2);
+        }
+
+        .search-container {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+
+        .search-results {
+            position: absolute;
+            width: 100%;
+            max-height: 300px;
+            overflow-y: auto;
+            background: var(--card-bg);
+            border-radius: 0 0 10px 10px;
+            box-shadow: var(--shadow);
+            z-index: 100;
+            display: none;
+        }
+
+        .search-result-item {
+            padding: 0.8rem 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .search-result-item:hover {
+            background: rgba(255, 77, 166, 0.1);
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .recent-reports {
+            margin-top: 1.5rem;
+        }
+
+        .report-card {
+            background: var(--glass-bg);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            animation: fadeInUp 0.5s ease;
+            border-left: 4px solid var(--primary);
+            backdrop-filter: blur(5px);
+        }
+
+        .report-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .report-type {
+            font-weight: 600;
+            color: var(--primary);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .report-time {
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        .report-desc {
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .report-location {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        #reportBtn {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--primary);
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 6px 20px rgba(255, 77, 166, 0.5);
+            cursor: pointer;
+            z-index: 100;
+            transition: var(--transition);
+            border: none;
+            animation: pulse 2s infinite;
+            backdrop-filter: blur(5px);
+        }
+
+        #reportBtn:hover {
+            background: var(--primary-dark);
+            transform: scale(1.1) rotate(90deg);
+            box-shadow: 0 8px 25px rgba(255, 77, 166, 0.7);
+        }
+
+        #reportModal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: var(--transition);
+        }
+
+        #reportModal.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-content {
+            background: var(--glass-bg);
+            width: 90%;
+            max-width: 500px;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            transform: translateY(20px);
+            transition: var(--transition);
+            position: relative;
+            backdrop-filter: blur(10px);
+            border: var(--glass-border);
+        }
+
+        #reportModal.active .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .modal-close:hover {
+            color: var(--danger);
+            transform: rotate(90deg);
+        }
+
+        .modal-title {
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border-radius: 10px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            background: var(--glass-bg);
+            color: var(--text);
+            font-size: 1rem;
+            transition: var(--transition);
+            box-shadow: var(--shadow);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(255, 77, 166, 0.2);
+        }
+
+        textarea.form-control {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border-radius: 10px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            box-shadow: var(--shadow);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(255, 77, 166, 0.4);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+
+        .btn-outline:hover {
+            background: rgba(255, 77, 166, 0.1);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 0.8rem;
+            margin-top: 1.5rem;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--primary);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            z-index: 1100;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            opacity: 0;
+            transition: var(--transition);
+            backdrop-filter: blur(5px);
+        }
+
+        .toast.show {
+            opacity: 1;
+            bottom: 2rem;
+        }
+
+        .toast.error {
+            background: var(--danger);
+        }
+
+        .toast.success {
+            background: var(--safe);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes fadeInRight {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 77, 166, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(255, 77, 166, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 77, 166, 0); }
+        }
+
+        .leaflet-container {
+            background: var(--light) !important;
+        }
+
+        .leaflet-popup-content {
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .leaflet-popup-content-wrapper {
+            border-radius: 12px !important;
+            box-shadow: var(--shadow) !important;
+            background: var(--glass-bg) !important;
+            color: var(--text) !important;
+            backdrop-filter: blur(10px);
+            border: var(--glass-border);
+        }
+
+        .leaflet-popup-tip {
+            background: var(--glass-bg) !important;
+        }
+
+        .leaflet-control-attribution {
+            background: var(--glass-bg) !important;
+            color: var(--text) !important;
+            backdrop-filter: blur(5px);
+            border: var(--glass-border);
+        }
+
+        .harassment-marker {
+            background-color: var(--danger);
+            border: 2px solid white;
+        }
+
+        .dark-area-marker {
+            background-color: var(--warning);
+            border: 2px solid white;
+        }
+
+        .broken-road-marker {
+            background-color: #3498db;
+            border: 2px solid white;
+        }
+
+        .unsafe-crowd-marker {
+            background-color: #9b59b6;
+            border: 2px solid white;
+        }
+
+        .route-options {
+            background: var(--glass-bg);
+            position: absolute;
+            bottom: 1rem;
+            left: 1rem;
+            z-index: 1000;
+            padding: 1rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            animation: slideInRight 0.5s ease;
+            max-width: 300px;
+            backdrop-filter: blur(10px);
+            border: var(--glass-border);
+        }
+
+        .safety-score {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.8rem;
+            margin-left: 0.5rem;
+        }
+
+        .score-safe { background: var(--safe); color: white; }
+        .score-medium { background: var(--warning); color: black; }
+        .score-danger { background: var(--danger); color: white; }
+
+        .emergency-panel {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .emergency-btn {
+            background: var(--danger);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
+            cursor: pointer;
+            transition: var(--transition);
+            animation: pulse 1.5s infinite;
+            backdrop-filter: blur(5px);
+        }
+
+        .emergency-btn:hover {
+            background: #c0392b;
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(231, 76, 60, 0.6);
+        }
+
+        .path-animation {
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            animation: dash 5s linear forwards;
+        }
+
+        @keyframes dash {
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--light);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 77, 166, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Dark mode fixes for routing panel */
+        .leaflet-routing-container {
+            background: var(--glass-bg) !important;
+            color: var(--text) !important;
+            box-shadow: var(--shadow) !important;
+            border-radius: 12px !important;
+            backdrop-filter: blur(10px);
+            border: var(--glass-border);
+        }
+
+        .leaflet-routing-container h3 {
+            color: var(--text) !important;
+        }
+
+        .leaflet-routing-alt {
+            background: var(--glass-bg) !important;
+            color: var(--text) !important;
+            max-height: 200px !important;
+        }
+
+        .leaflet-routing-alt table {
+            color: var(--text) !important;
+        }
+
+        .leaflet-routing-alt tr:hover {
+            background-color: rgba(255, 77, 166, 0.1) !important;
+        }
+
+        .leaflet-bar {
+            box-shadow: var(--shadow) !important;
+            background: var(--glass-bg) !important;
+            border: var(--glass-border) !important;
+            backdrop-filter: blur(5px);
+        }
+
+        .leaflet-bar a {
+            background: var(--glass-bg) !important;
+            color: var(--text) !important;
+            border-bottom: var(--glass-border) !important;
+        }
+
+        .leaflet-bar a:hover {
+            background: rgba(255, 77, 166, 0.1) !important;
+        }
+
+        .leaflet-control-locate {
+            background: var(--glass-bg) !important;
+            border: var(--glass-border) !important;
+            backdrop-filter: blur(5px);
+        }
+
+        .leaflet-control-locate a {
+            color: var(--text) !important;
+            background-color: var(--glass-bg) !important;
+            border-bottom: var(--glass-border) !important;
+        }
+
+        /* Search results dropdown */
+        .search-results {
+            background: var(--glass-bg) !important;
+            backdrop-filter: blur(10px);
+            border: var(--glass-border);
+            box-shadow: var(--shadow);
+        }
+
+        .search-result-item {
+            background: var(--glass-bg);
+            transition: var(--transition);
+        }
+
+        .search-result-item:hover {
+            background: rgba(255, 77, 166, 0.1) !important;
+        }
+
+        @media (max-width: 992px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            .sidebar {
+                position: fixed;
+                top: 82px;
+                left: -100%;
+                width: 80%;
+                height: calc(100vh - 82px);
+                transition: left 0.3s ease;
+            }
+            .sidebar.active {
+                left: 0;
+            }
+            .map-section {
+                grid-column: 1;
+            }
+            .menu-toggle {
+                display: flex;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .logo {
+                font-size: 1.5rem;
+            }
+            
+            .container {
+                grid-template-columns: 1fr;
+                padding: 1rem;
+            }
+            
+            .sidebar {
+                order: 2;
+            }
+            
+            .map-section {
+                height: 400px;
+            }
+            
+            #reportBtn {
+                width: 50px;
+                height: 50px;
+                font-size: 1.2rem;
+                bottom: 1rem;
+                right: 1rem;
+            }
+        }
+    </style>
+</head>
 <body>
+    <div class="loading-screen" id="loadingScreen">
+        <div class="spinner"></div>
+        <h2>Loading SafeScape</h2>
+        <p>Preparing your safety navigation...</p>
+    </div>
+
     <header>
-        <h1>🛡️ SafeScape</h1>
-        <p>See danger before you walk. Stay safe, even offline.</p>
+        <div class="header-content">
+            <div class="logo">
+                <i class="fas fa-shield-alt"></i>
+                <span>SafeScape Pro</span>
+            </div>
+            <button class="theme-toggle" id="themeToggle">
+                <i class="fas fa-moon"></i>
+            </button>
+            <button class="menu-toggle" id="menuToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <p class="tagline">Intelligent safety routing for everyone</p>
+        </div>
     </header>
 
-    <main>
-        <div id="filterBar">
-            <label for="filterType">Filter:</label>
-            <select id="filterType">
-                <option value="All">All</option>
-                <option value="Harassment">Harassment</option>
-                <option value="Dark Area">Dark Area</option>
-                <option value="Broken Road">Broken Road</option>
-                <option value="Unsafe Crowd">Unsafe Crowd</option>
-            </select>
-        </div>
+    <div class="container">
+        <aside class="sidebar" id="sidebar">
+            <div class="stats-card">
+                <h2><i class="fas fa-chart-pie"></i> Safety Stats</h2>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="totalReports">48</div>
+                        <div class="stat-label">Total Reports</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="resolvedReports">32</div>
+                        <div class="stat-label">Resolved</div>
+                    </div>
+                </div>
+            </div>
 
-        <div id="map"></div>
-        <button id="reportBtn">+ Report Danger</button>
-    </main>
+            <div class="route-controls">
+                <h2><i class="fas fa-route"></i> Plan Your Route</h2>
+                <div class="form-group search-container">
+                    <label for="startPoint">Start Point</label>
+                    <input type="text" id="startPoint" class="form-control" placeholder="Current location">
+                    <div class="search-results" id="startResults"></div>
+                </div>
+                <div class="form-group search-container">
+                    <label for="endPoint">Destination</label>
+                    <input type="text" id="endPoint" class="form-control" placeholder="Where to?">
+                    <div class="search-results" id="endResults"></div>
+                </div>
+                <div class="form-group">
+                    <label>Route Preference</label>
+                    <select id="routePreference" class="form-control">
+                        <option value="safest">Safest Route</option>
+                        <option value="fastest">Fastest Route</option>
+                        <option value="balanced">Balanced</option>
+                        <option value="wellLit">Well-lit Areas</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" id="calculateRoute">
+                    <i class="fas fa-directions"></i> Get Safe Route
+                </button>
+            </div>
 
-    <div id="reportModal" class="hidden">
-        <div class="modal-content">
-            <h2>Report a Dangerous Spot</h2>
-            <label>Type:
-                <select id="dangerType">
-                    <option>Harassment</option>
-                    <option>Dark Area</option>
-                    <option>Broken Road</option>
-                    <option>Unsafe Crowd</option>
+            <div class="filter-section">
+                <h3><i class="fas fa-filter"></i> Filter Reports</h3>
+                <select id="filterType">
+                    <option value="All">All Hazards</option>
+                    <option value="Harassment">Harassment</option>
+                    <option value="Dark Area">Dark Area</option>
+                    <option value="Broken Road">Broken Road</option>
+                    <option value="Unsafe Crowd">Unsafe Crowd</option>
                 </select>
-            </label>
-            <label>Description:
-                <textarea id="dangerDesc" placeholder="Optional..."></textarea>
-            </label>
-            <button id="submitReport" type="button">Submit</button>
-            <button id="closeModal" type="button">Cancel</button>
+            </div>
+
+            <div class="filter-section">
+                <h3><i class="fas fa-map-marker-alt"></i> Nearby Hazards</h3>
+                <select id="distanceFilter">
+                    <option value="1">Within 1 km</option>
+                    <option value="3">Within 3 km</option>
+                    <option value="5">Within 5 km</option>
+                    <option value="10">Within 10 km</option>
+                    <option value="all">Show All</option>
+                </select>
+            </div>
+
+            <div class="recent-reports">
+                <h2><i class="fas fa-history"></i> Recent Reports</h2>
+                <div id="recentReportsList">
+                    <!-- Reports will be added here dynamically -->
+                </div>
+            </div>
+        </aside>
+
+        <main class="map-section">
+            <div id="map"></div>
+            
+            <div class="route-options hidden" id="routeOptions">
+                <h3><i class="fas fa-route"></i> Route Options</h3>
+                <div id="routeDetails"></div>
+                <div class="btn-group">
+                    <button class="btn btn-primary" id="startNavigation">
+                        <i class="fas fa-play"></i> Start Navigation
+                    </button>
+                    <button class="btn btn-outline" id="closeRouteOptions">
+                        <i class="fas fa-times"></i> Close
+                    </button>
+                </div>
+            </div>
+
+            <div class="emergency-panel">
+                <button class="emergency-btn" id="emergencySOS" title="Emergency SOS">
+                    <i class="fas fa-bell"></i>
+                </button>
+                <button class="emergency-btn" style="background: var(--police)" id="findPolice" title="Nearest Police">
+                    <i class="fas fa-shield-alt"></i>
+                </button>
+                <button class="emergency-btn" style="background: var(--hospital)" id="findHospital" title="Nearest Hospital">
+                    <i class="fas fa-hospital"></i>
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <button id="reportBtn" title="Report Danger">
+        <i class="fas fa-plus"></i>
+    </button>
+
+    <div id="reportModal">
+        <div class="modal-content">
+            <button class="modal-close" id="closeModal">
+                <i class="fas fa-times"></i>
+            </button>
+            <h2 class="modal-title">
+                <i class="fas fa-exclamation-triangle"></i> Report Danger
+            </h2>
+            <div class="form-group">
+                <label for="dangerType">Type of Hazard</label>
+                <select id="dangerType" class="form-control">
+                    <option value="Harassment">Harassment</option>
+                    <option value="Dark Area">Dark Area</option>
+                    <option value="Broken Road">Broken Road</option>
+                    <option value="Unsafe Crowd">Unsafe Crowd</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="dangerDesc">Description (Optional)</label>
+                <textarea id="dangerDesc" class="form-control" placeholder="Provide more details about the hazard..."></textarea>
+            </div>
+            <div class="form-group">
+                <label for="dangerSeverity">Severity Level</label>
+                <select id="dangerSeverity" class="form-control">
+                    <option value="Low">Low</option>
+                    <option value="Medium" selected>Medium</option>
+                    <option value="High">High</option>
+                    <option value="Critical">Critical</option>
+                </select>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-primary" id="submitReport">
+                    <i class="fas fa-paper-plane"></i> Submit Report
+                </button>
+                <button class="btn btn-outline" id="cancelReport">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+            </div>
         </div>
     </div>
 
-</body>
+    <div class="toast" id="toast"></div>
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet-geosearch@3.0.0/dist/geosearch.umd.js"></script>
+    <script>
+        // SafeScape Pro Application
+        document.addEventListener('DOMContentLoaded', function() {
+            // Hide loading screen after everything loads
+            setTimeout(() => {
+                document.getElementById('loadingScreen').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('loadingScreen').style.display = 'none';
+                }, 500);
+            }, 1500);
+
+            // Initialize map with correct theme
+            const initialTheme = localStorage.getItem('theme') || 'light';
+            if (initialTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+                document.getElementById('themeToggle').innerHTML = '<i class="fas fa-sun"></i>';
+            }
+
+            const map = L.map('map', {
+                zoomControl: false,
+                preferCanvas: true
+            }).setView([20.5937, 78.9629], 13);
+
+            // Tile layers with theme support
+            const lightTiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            });
+
+            const darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            });
+
+            // Set initial tile layer
+            if (initialTheme === 'dark') {
+                darkTiles.addTo(map);
+            } else {
+                lightTiles.addTo(map);
+            }
+
+            // Initialize GeoSearch provider
+            const searchProvider = new GeoSearch.OpenStreetMapProvider();
+
+            // App State
+            let userLocation = null;
+            let selectedLatLng = null;
+            let tempMarker = null;
+            let allMarkers = [];
+            let currentTheme = initialTheme;
+            let currentRoute = null;
+            let routingControl = null;
+            let searchTimeout = null;
+
+            // Danger zones data
+            const dangerZones = [
+                { lat: 28.6448, lng: 77.2167, type: "Harassment", desc: "Multiple reports of verbal harassment in this area at night", severity: "High", timestamp: "2023-06-15T18:30:00" },
+                { lat: 19.076, lng: 72.8777, type: "Broken Road", desc: "Large potholes and no street lighting", severity: "Medium", timestamp: "2023-06-10T09:15:00" },
+                { lat: 12.9716, lng: 77.5946, type: "Dark Area", desc: "No street lights for 200m stretch", severity: "Medium", timestamp: "2023-06-05T20:45:00" },
+                { lat: 13.0827, lng: 80.2707, type: "Unsafe Crowd", desc: "Aggressive street vendors and pickpockets reported", severity: "High", timestamp: "2023-05-28T16:20:00" },
+                { lat: 22.5726, lng: 88.3639, type: "Harassment", desc: "Eve-teasing common near metro station exit", severity: "Critical", timestamp: "2023-05-20T19:00:00" }
+            ];
+
+            // Police stations and hospitals (simulated data)
+            const policeStations = [
+                { lat: 28.6358, lng: 77.2245, name: "Central Police Station" },
+                { lat: 19.072, lng: 72.882, name: "Local Police Outpost" },
+                { lat: 12.975, lng: 77.603, name: "Traffic Police HQ" }
+            ];
+
+            const hospitals = [
+                { lat: 28.632, lng: 77.219, name: "City General Hospital" },
+                { lat: 19.078, lng: 72.885, name: "Emergency Care Center" }
+            ];
+
+            // Initialize markers and features
+            function initializeMapFeatures() {
+                // Add default danger zones
+                dangerZones.forEach(zone => {
+                    addMarker(zone.lat, zone.lng, zone.type, zone.desc, zone.severity, zone.timestamp);
+                });
+
+                // Add saved reports from local storage
+                const savedReports = JSON.parse(localStorage.getItem('safescapeReports') || '[]');
+                savedReports.forEach(report => {
+                    addMarker(report.lat, report.lng, report.type, report.desc, report.severity, report.timestamp);
+                });
+
+                // Add police stations and hospitals
+                policeStations.forEach(station => {
+                    L.marker([station.lat, station.lng], {
+                        icon: L.divIcon({
+                            className: 'police-marker',
+                            html: '<i class="fas fa-shield-alt"></i>',
+                            iconSize: [30, 30]
+                        })
+                    }).addTo(map).bindPopup(`<b>${station.name}</b><br>Police Station`);
+                });
+
+                hospitals.forEach(hospital => {
+                    L.marker([hospital.lat, hospital.lng], {
+                        icon: L.divIcon({
+                            className: 'hospital-marker',
+                            html: '<i class="fas fa-hospital"></i>',
+                            iconSize: [30, 30]
+                        })
+                    }).addTo(map).bindPopup(`<b>${hospital.name}</b><br>Hospital`);
+                });
+
+                updateRecentReportsList();
+                updateStats();
+            }
+
+            // Add marker to map
+            function addMarker(lat, lng, type, desc, severity, timestamp) {
+                const markerOptions = {
+                    customType: type,
+                    severity: severity,
+                    timestamp: timestamp || new Date().toISOString(),
+                    className: `${type.toLowerCase().replace(' ', '-')}-marker`
+                };
+
+                const marker = L.circleMarker([lat, lng], {
+                    radius: getMarkerSize(severity),
+                    color: getMarkerColor(type),
+                    fillColor: getMarkerColor(type),
+                    fillOpacity: 0.9,
+                    ...markerOptions
+                });
+
+                const dateStr = new Date(markerOptions.timestamp).toLocaleString();
+                const popupContent = `
+                    <div class="marker-popup">
+                        <h3>${type}</h3>
+                        <p><strong>Severity:</strong> ${severity || 'Unknown'}</p>
+                        <p>${desc || 'No description provided'}</p>
+                        <small><i class="fas fa-clock"></i> ${dateStr}</small>
+                    </div>
+                `;
+
+                marker.bindPopup(popupContent);
+                marker.addTo(map);
+                allMarkers.push(marker);
+
+                return marker;
+            }
+
+            // Get marker color based on type
+            function getMarkerColor(type) {
+                const colors = {
+                    'Harassment': '#e74c3c',
+                    'Dark Area': '#f39c12',
+                    'Broken Road': '#3498db',
+                    'Unsafe Crowd': '#9b59b6'
+                };
+                return colors[type] || '#ff4da6';
+            }
+
+            // Get marker size based on severity
+            function getMarkerSize(severity) {
+                const sizes = {
+                    'Low': 5,
+                    'Medium': 7,
+                    'High': 9,
+                    'Critical': 11
+                };
+                return sizes[severity] || 6;
+            }
+
+            // Locate user
+            function locateUser() {
+                if ("geolocation" in navigator) {
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            userLocation = {
+                                lat: position.coords.latitude,
+                                lng: position.coords.longitude
+                            };
+
+                            // Add or update user marker
+                            if (window.userMarker) {
+                                window.userMarker.setLatLng(userLocation);
+                            } else {
+                                window.userMarker = L.circleMarker(userLocation, {
+                                    radius: 8,
+                                    color: "#4CAF50",
+                                    fillColor: "#4CAF50",
+                                    fillOpacity: 0.9,
+                                    className: 'user-marker'
+                                })
+                                .addTo(map)
+                                .bindPopup("📍 You are here")
+                                .openPopup();
+                            }
+
+                            map.setView(userLocation, 15);
+                            updateNearbyReports();
+                            document.getElementById('startPoint').value = "Current Location";
+                        },
+                        (error) => {
+                            showToast("Location access denied. Using default view.", "error");
+                            console.warn("Location access denied:", error);
+                        },
+                        { enableHighAccuracy: true, timeout: 10000 }
+                    );
+                } else {
+                    showToast("Geolocation is not supported by your browser", "error");
+                }
+            }
+
+            // Search for locations
+            function searchLocations(query, resultsContainer) {
+                if (query.length < 3) {
+                    resultsContainer.style.display = 'none';
+                    return;
+                }
+
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    searchProvider.search({ query: query })
+                        .then(results => {
+                            const resultsHTML = results.map(result => `
+                                <div class="search-result-item" data-lat="${result.y}" data-lng="${result.x}">
+                                    <strong>${result.label.split(',')[0]}</strong>
+                                    <div class="text-sm">${result.label.split(',').slice(1).join(',')}</div>
+                                </div>
+                            `).join('');
+
+                            resultsContainer.innerHTML = resultsHTML;
+                            resultsContainer.style.display = results.length ? 'block' : 'none';
+
+                            // Add click handlers to results
+                            resultsContainer.querySelectorAll('.search-result-item').forEach(item => {
+                                item.addEventListener('click', () => {
+                                    const lat = parseFloat(item.getAttribute('data-lat'));
+                                    const lng = parseFloat(item.getAttribute('data-lng'));
+                                    const input = resultsContainer.id === 'startResults' ? 
+                                        document.getElementById('startPoint') : 
+                                        document.getElementById('endPoint');
+                                    
+                                    input.value = item.querySelector('strong').textContent;
+                                    resultsContainer.style.display = 'none';
+                                    
+                                    // Center map on selected location
+                                    map.setView([lat, lng], 15);
+                                });
+                            });
+                        })
+                        .catch(error => {
+                            console.error("Search error:", error);
+                            resultsContainer.style.display = 'none';
+                        });
+                }, 300);
+            }
+
+            // Update nearby reports based on distance filter
+            function updateNearbyReports() {
+                if (!userLocation) return;
+
+                const distance = document.getElementById('distanceFilter').value;
+                if (distance === 'all') {
+                    allMarkers.forEach(marker => map.addLayer(marker));
+                    return;
+                }
+
+                const maxDistance = parseInt(distance) * 1000; // Convert km to meters
+
+                allMarkers.forEach(marker => {
+                    const markerPos = marker.getLatLng();
+                    const distanceToUser = map.distance(userLocation, markerPos);
+
+                    if (distanceToUser <= maxDistance) {
+                        map.addLayer(marker);
+                    } else {
+                        map.removeLayer(marker);
+                    }
+                });
+            }
+
+            // Filter markers by type
+            function filterMarkersByType() {
+                const selectedType = document.getElementById('filterType').value;
+                
+                allMarkers.forEach(marker => {
+                    if (selectedType === "All") {
+                        map.addLayer(marker);
+                    } else {
+                        if (marker.options.customType === selectedType) {
+                            map.addLayer(marker);
+                        } else {
+                            map.removeLayer(marker);
+                        }
+                    }
+                });
+            }
+
+            // Calculate safe route
+            function calculateSafeRoute() {
+                const startInput = document.getElementById('startPoint').value;
+                const endInput = document.getElementById('endPoint').value;
+                const preference = document.getElementById('routePreference').value;
+                
+                if (!endInput) {
+                    showToast('Please enter a destination', 'error');
+                    return;
+                }
+
+                showLoading('Calculating safest route...');
+                
+                // Geocode the destination
+                searchProvider.search({ query: endInput })
+                    .then(results => {
+                        if (results.length === 0) {
+                            throw new Error("Destination not found");
+                        }
+
+                        const destination = {
+                            lat: results[0].y,
+                            lng: results[0].x,
+                            name: results[0].label
+                        };
+
+                        // Determine start point
+                        let start;
+                        if (startInput === "Current Location" && userLocation) {
+                            start = userLocation;
+                        } else {
+                            // Geocode start point if not current location
+                            return searchProvider.search({ query: startInput })
+                                .then(startResults => {
+                                    if (startResults.length === 0) {
+                                        throw new Error("Start location not found");
+                                    }
+                                    return {
+                                        start: {
+                                            lat: startResults[0].y,
+                                            lng: startResults[0].x,
+                                            name: startResults[0].label
+                                        },
+                                        destination: destination
+                                    };
+                                });
+                        }
+
+                        return { start, destination };
+                    })
+                    .then(({ start, destination }) => {
+                        // Generate route based on preference
+                        const route = generateDynamicRoute(start, destination, preference);
+                        displayRouteOptions(route);
+                        hideLoading();
+                    })
+                    .catch(error => {
+                        console.error("Routing error:", error);
+                        hideLoading();
+                        showToast("Could not calculate route. Please check your locations.", "error");
+                    });
+            }
+
+            // Generate dynamic route based on start and end points
+            function generateDynamicRoute(start, end, preference) {
+                // Calculate midpoint for waypoints
+                const midLat = (start.lat + end.lat) / 2;
+                const midLng = (start.lng + end.lng) / 2;
+                
+                // Generate slightly different waypoints based on preference
+                const waypoints = [];
+                
+                if (preference === "safest") {
+                    // Add police station near midpoint if available
+                    const nearestPolice = findNearestFeature({lat: midLat, lng: midLng}, policeStations);
+                    if (nearestPolice) {
+                        waypoints.push(nearestPolice);
+                    }
+                } 
+                else if (preference === "wellLit") {
+                    // Add points along main roads (simulated)
+                    waypoints.push({
+                        lat: start.lat + (end.lat - start.lat) * 0.3,
+                        lng: start.lng + (end.lng - start.lng) * 0.3
+                    });
+                    waypoints.push({
+                        lat: start.lat + (end.lat - start.lat) * 0.7,
+                        lng: start.lng + (end.lng - start.lng) * 0.7
+                    });
+                }
+
+                // Calculate distance and time (simplified)
+                const distanceKm = (map.distance(start, end) / 1000).toFixed(1);
+                const baseTime = distanceKm * 15; // 15 minutes per km
+                
+                // Adjust based on preference
+                let time, safetyScore;
+                if (preference === "fastest") {
+                    time = baseTime;
+                    safetyScore = 6;
+                } else if (preference === "safest") {
+                    time = baseTime * 1.3;
+                    safetyScore = 9;
+                } else if (preference === "wellLit") {
+                    time = baseTime * 1.2;
+                    safetyScore = 8;
+                } else { // balanced
+                    time = baseTime * 1.1;
+                    safetyScore = 7;
+                }
+
+                return {
+                    name: `${preference.charAt(0).toUpperCase() + preference.slice(1)} Path`,
+                    safetyScore: safetyScore,
+                    time: `${Math.round(time)} min`,
+                    distance: `${distanceKm} km`,
+                    lighting: preference === "wellLit" ? "85" : "60",
+                    policeStations: preference === "safest" ? 2 : 1,
+                    waypoints: waypoints,
+                    start: start,
+                    end: end
+                };
+            }
+
+            // Display route options with safety information
+            function displayRouteOptions(route) {
+                const optionsPanel = document.getElementById('routeOptions');
+                const detailsContainer = document.getElementById('routeDetails');
+                
+                detailsContainer.innerHTML = `
+                    <div class="route-option">
+                        <h4>${route.name} <span class="safety-score ${getSafetyClass(route.safetyScore)}">${route.safetyScore}/10</span></h4>
+                        <p><i class="fas fa-clock"></i> ${route.time}</p>
+                        <p><i class="fas fa-walking"></i> ${route.distance}</p>
+                        <p><i class="fas fa-lightbulb"></i> ${route.lighting}% well-lit</p>
+                        <p><i class="fas fa-shield-alt"></i> ${route.policeStations} police stations nearby</p>
+                    </div>
+                `;
+                
+                optionsPanel.classList.remove('hidden');
+                optionsPanel.scrollIntoView({ behavior: 'smooth' });
+
+                // Store current route
+                currentRoute = route;
+
+                // Clear previous route if exists
+                if (routingControl) {
+                    map.removeControl(routingControl);
+                }
+
+                // Prepare waypoints
+                const waypoints = [L.latLng(route.start.lat, route.start.lng)];
+                if (route.waypoints && route.waypoints.length > 0) {
+                    route.waypoints.forEach(wp => {
+                        waypoints.push(L.latLng(wp.lat, wp.lng));
+                    });
+                }
+                waypoints.push(L.latLng(route.end.lat, route.end.lng));
+
+                // Show route on map
+                routingControl = L.Routing.control({
+                    waypoints: waypoints,
+                    routeWhileDragging: false,
+                    showAlternatives: false,
+                    addWaypoints: false,
+                    draggableWaypoints: false,
+                    fitSelectedRoutes: true,
+                    lineOptions: {
+                        styles: [{ 
+                            color: '#4CAF50', 
+                            opacity: 0.8, 
+                            weight: 5,
+                            className: 'path-animation'
+                        }]
+                    },
+                    containerClassName: 'routing-container',
+                    plan: L.Routing.plan(waypoints, {
+                        draggable: false,
+                        routeWhileDragging: false
+                    })
+                }).addTo(map);
+            }
+
+            // Start navigation
+            function startNavigation() {
+                if (!currentRoute) return;
+                
+                showToast(`Starting navigation on ${currentRoute.name}`, 'success');
+                document.getElementById('routeOptions').classList.add('hidden');
+                
+                // Zoom to show the entire route
+                const bounds = L.latLngBounds(
+                    [currentRoute.start.lat, currentRoute.start.lng],
+                    [currentRoute.end.lat, currentRoute.end.lng]
+                );
+                map.fitBounds(bounds, { padding: [50, 50] });
+                
+                // In a real app, you would start turn-by-turn navigation here
+                // This could include voice guidance, step-by-step instructions, etc.
+            }
+
+            // Find nearest police stations
+            function findNearestPolice() {
+                if (!userLocation) {
+                    showToast("Please enable location services first", "error");
+                    return;
+                }
+
+                // Find closest police station
+                let closestStation = null;
+                let minDistance = Infinity;
+
+                policeStations.forEach(station => {
+                    const distance = map.distance(
+                        userLocation,
+                        { lat: station.lat, lng: station.lng }
+                    );
+                    
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        closestStation = station;
+                    }
+                });
+
+                if (closestStation) {
+                    const kmDistance = (minDistance / 1000).toFixed(1);
+                    showToast(`Nearest police station: ${closestStation.name} (${kmDistance}km away)`, "success");
+                    
+                    // Zoom to the police station
+                    map.setView([closestStation.lat, closestStation.lng], 15);
+                    
+                    // Show route to police station
+                    if (routingControl) {
+                        map.removeControl(routingControl);
+                    }
+                    
+                    routingControl = L.Routing.control({
+                        waypoints: [
+                            L.latLng(userLocation.lat, userLocation.lng),
+                            L.latLng(closestStation.lat, closestStation.lng)
+                        ],
+                        routeWhileDragging: true,
+                        showAlternatives: false,
+                        lineOptions: {
+                            styles: [{ color: '#3498db', opacity: 0.8, weight: 5 }]
+                        }
+                    }).addTo(map);
+                } else {
+                    showToast("No police stations found nearby", "error");
+                }
+            }
+
+            // Find nearest hospital
+            function findNearestHospital() {
+                if (!userLocation) {
+                    showToast("Please enable location services first", "error");
+                    return;
+                }
+
+                // Find closest hospital
+                let closestHospital = null;
+                let minDistance = Infinity;
+
+                hospitals.forEach(hospital => {
+                    const distance = map.distance(
+                        userLocation,
+                        { lat: hospital.lat, lng: hospital.lng }
+                    );
+                    
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        closestHospital = hospital;
+                    }
+                });
+
+                if (closestHospital) {
+                    const kmDistance = (minDistance / 1000).toFixed(1);
+                    showToast(`Nearest hospital: ${closestHospital.name} (${kmDistance}km away)`, "success");
+                    
+                    // Zoom to the hospital
+                    map.setView([closestHospital.lat, closestHospital.lng], 15);
+                    
+                    // Show route to hospital
+                    if (routingControl) {
+                        map.removeControl(routingControl);
+                    }
+                    
+                    routingControl = L.Routing.control({
+                        waypoints: [
+                            L.latLng(userLocation.lat, userLocation.lng),
+                            L.latLng(closestHospital.lat, closestHospital.lng)
+                        ],
+                        routeWhileDragging: true,
+                        showAlternatives: false,
+                        lineOptions: {
+                            styles: [{ color: '#9b59b6', opacity: 0.8, weight: 5 }]
+                        }
+                    }).addTo(map);
+                } else {
+                    showToast("No hospitals found nearby", "error");
+                }
+            }
+
+            // Emergency SOS
+            function emergencySOS() {
+                showToast("Emergency alert sent to nearby authorities!", "error");
+                // In a real app, this would send your location to emergency services
+            }
+
+            // Helper function to find nearest feature
+            function findNearestFeature(location, features) {
+                let nearest = null;
+                let minDistance = Infinity;
+                
+                features.forEach(feature => {
+                    const distance = map.distance(location, feature);
+                    if (distance < minDistance && distance < 2000) { // Within 2km
+                        minDistance = distance;
+                        nearest = feature;
+                    }
+                });
+                
+                return nearest;
+            }
+
+            // Update recent reports list
+            function updateRecentReportsList() {
+                const recentReportsList = document.getElementById('recentReportsList');
+                recentReportsList.innerHTML = '';
+                
+                const savedReports = JSON.parse(localStorage.getItem('safescapeReports') || '[]');
+                const allReports = [...dangerZones, ...savedReports]
+                    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+                    .slice(0, 5);
+
+                allReports.forEach(report => {
+                    const reportElement = document.createElement('div');
+                    reportElement.className = 'report-card';
+                    reportElement.innerHTML = `
+                        <div class="report-header">
+                            <span class="report-type" style="color: ${getMarkerColor(report.type)}">
+                                <i class="fas fa-${getReportIcon(report.type)}"></i> ${report.type}
+                            </span>
+                            <span class="report-time">${formatTimeAgo(report.timestamp)}</span>
+                        </div>
+                        <p class="report-desc">${report.desc || 'No description'}</p>
+                        <p class="report-location">
+                            <i class="fas fa-map-marker-alt"></i> 
+                            ${report.lat.toFixed(4)}, ${report.lng.toFixed(4)}
+                        </p>
+                    `;
+                    
+                    reportElement.addEventListener('click', () => {
+                        map.setView([report.lat, report.lng], 16);
+                        const marker = allMarkers.find(m => 
+                            m.getLatLng().lat === report.lat && 
+                            m.getLatLng().lng === report.lng
+                        );
+                        if (marker) marker.openPopup();
+                    });
+
+                    recentReportsList.appendChild(reportElement);
+                });
+            }
+
+            // Get icon for report type
+            function getReportIcon(type) {
+                const icons = {
+                    'Harassment': 'exclamation-triangle',
+                    'Dark Area': 'moon',
+                    'Broken Road': 'road',
+                    'Unsafe Crowd': 'users'
+                };
+                return icons[type] || 'map-marker-alt';
+            }
+
+            // Format time as "X minutes/hours/days ago"
+            function formatTimeAgo(timestamp) {
+                const now = new Date();
+                const reportDate = new Date(timestamp);
+                const diffInSeconds = Math.floor((now - reportDate) / 1000);
+
+                if (diffInSeconds < 60) return 'Just now';
+                if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+                if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+                return `${Math.floor(diffInSeconds / 86400)}d ago`;
+            }
+
+            // Helper function to get safety class
+            function getSafetyClass(score) {
+                if (score >= 8) return 'score-safe';
+                if (score >= 5) return 'score-medium';
+                return 'score-danger';
+            }
+
+            // Update stats
+            function updateStats() {
+                const savedReports = JSON.parse(localStorage.getItem('safescapeReports') || '[]');
+                document.getElementById('totalReports').textContent = savedReports.length + dangerZones.length;
+                // In a real app, you'd track resolved reports too
+            }
+
+            // Show loading state
+            function showLoading(message) {
+                const loadingScreen = document.getElementById('loadingScreen');
+                loadingScreen.style.display = 'flex';
+                loadingScreen.style.opacity = '1';
+                loadingScreen.querySelector('p').textContent = message;
+            }
+
+            // Hide loading state
+            function hideLoading() {
+                const loadingScreen = document.getElementById('loadingScreen');
+                loadingScreen.style.opacity = '0';
+                setTimeout(() => {
+                    loadingScreen.style.display = 'none';
+                }, 500);
+            }
+
+            // Show toast notification
+            function showToast(message, type = '') {
+                const toast = document.getElementById('toast');
+                toast.textContent = message;
+                toast.className = `toast ${type}`;
+                toast.classList.add('show');
+                
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 3000);
+            }
+
+            // Open report modal
+            function openReportModal() {
+                document.getElementById('reportModal').classList.add('active');
+                document.body.style.overflow = 'hidden';
+
+                // Allow user to click on map to pick location
+                map.once('click', function(e) {
+                    selectedLatLng = e.latlng;
+
+                    // Remove previous temp marker if exists
+                    if (tempMarker) {
+                        map.removeLayer(tempMarker);
+                    }
+
+                    // Add new temp marker
+                    tempMarker = L.circleMarker(selectedLatLng, {
+                        radius: 6,
+                        color: "#ff4da6",
+                        fillColor: "#ff4da6",
+                        fillOpacity: 0.9,
+                        className: 'temp-marker'
+                    }).addTo(map);
+
+                    showToast("Location selected. Complete the form to submit.", "success");
+                });
+            }
+
+            // Close report modal
+            function closeReportModal() {
+                document.getElementById('reportModal').classList.remove('active');
+                document.body.style.overflow = 'auto';
+
+                // Clear form
+                document.getElementById('dangerType').value = "Harassment";
+                document.getElementById('dangerDesc').value = "";
+                document.getElementById('dangerSeverity').value = "Medium";
+
+                // Remove temp marker if exists
+                if (tempMarker) {
+                    map.removeLayer(tempMarker);
+                    tempMarker = null;
+                }
+
+                selectedLatLng = null;
+            }
+
+            // Submit report
+            function submitNewReport() {
+                if (!selectedLatLng) {
+                    showToast("Please select a location on the map first", "error");
+                    return;
+                }
+
+                const type = document.getElementById('dangerType').value;
+                const desc = document.getElementById('dangerDesc').value;
+                const severity = document.getElementById('dangerSeverity').value;
+                const timestamp = new Date().toISOString();
+
+                // Add marker to map
+                addMarker(selectedLatLng.lat, selectedLatLng.lng, type, desc, severity, timestamp);
+
+                // Save to local storage
+                saveToLocal(type, desc, selectedLatLng.lat, selectedLatLng.lng, severity, timestamp);
+
+                // Update stats
+                updateStats();
+
+                showToast("Report submitted successfully! Thank you.", "success");
+                closeReportModal();
+            }
+
+            // Save report to local storage
+            function saveToLocal(type, desc, lat, lng, severity, timestamp) {
+                const existing = JSON.parse(localStorage.getItem('safescapeReports') || '[]');
+                const newReport = { type, desc, lat, lng, severity, timestamp };
+                existing.push(newReport);
+                localStorage.setItem('safescapeReports', JSON.stringify(existing));
+                
+                // Update recent reports list
+                updateRecentReportsList();
+            }
+
+            // Toggle theme
+            function toggleTheme() {
+                currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+                document.body.classList.toggle('dark-mode');
+                localStorage.setItem('theme', currentTheme);
+                
+                // Update map tiles
+                if (currentTheme === 'dark') {
+                    map.removeLayer(lightTiles);
+                    darkTiles.addTo(map);
+                } else {
+                    map.removeLayer(darkTiles);
+                    lightTiles.addTo(map);
+                }
+                
+                // Update icon
+                document.getElementById('themeToggle').innerHTML = currentTheme === 'dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+            }
+
+            // Toggle sidebar on mobile
+            function toggleSidebar() {
+                document.getElementById('sidebar').classList.toggle('active');
+            }
+
+            // Initialize all features
+            function initializeApp() {
+                initializeMapFeatures();
+                
+                // Set up event listeners
+                document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+                document.getElementById('menuToggle').addEventListener('click', toggleSidebar);
+                document.getElementById('reportBtn').addEventListener('click', openReportModal);
+                document.getElementById('closeModal').addEventListener('click', closeReportModal);
+                document.getElementById('cancelReport').addEventListener('click', closeReportModal);
+                document.getElementById('submitReport').addEventListener('click', submitNewReport);
+                document.getElementById('filterType').addEventListener('change', filterMarkersByType);
+                document.getElementById('distanceFilter').addEventListener('change', updateNearbyReports);
+                document.getElementById('calculateRoute').addEventListener('click', calculateSafeRoute);
+                document.getElementById('startNavigation').addEventListener('click', startNavigation);
+                document.getElementById('closeRouteOptions').addEventListener('click', () => {
+                    document.getElementById('routeOptions').classList.add('hidden');
+                });
+                document.getElementById('emergencySOS').addEventListener('click', emergencySOS);
+                document.getElementById('findPolice').addEventListener('click', findNearestPolice);
+                document.getElementById('findHospital').addEventListener('click', findNearestHospital);
+
+                // Search input handlers
+                document.getElementById('startPoint').addEventListener('input', (e) => {
+                    if (e.target.value !== "Current Location") {
+                        searchLocations(e.target.value, document.getElementById('startResults'));
+                    }
+                });
+
+                document.getElementById('endPoint').addEventListener('input', (e) => {
+                    searchLocations(e.target.value, document.getElementById('endResults'));
+                });
+
+                // Close search results when clicking elsewhere
+                document.addEventListener('click', (e) => {
+                    if (!e.target.closest('.search-container')) {
+                        document.getElementById('startResults').style.display = 'none';
+                        document.getElementById('endResults').style.display = 'none';
+                    }
+                });
+
+                // Try to locate user
+                locateUser();
+            }
+
+            // Start the app
+            initializeApp();
+        });
+    </script>
+</body>
 </html>
