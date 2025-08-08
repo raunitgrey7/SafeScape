@@ -1,14 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SafeScape Pro - Advanced Safety Navigation</title>
+    <title>SafeScape - Advanced Safety Navigation</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-geosearch@3.0.0/dist/geosearch.css">
-    <link rel="manifest" href="manifest.json">
+    <!-- Add Leaflet.markercluster CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css">
+    <!-- Add manifest for PWA -->
+    <link rel="manifest" href="/manifest.json">
     <style>
         :root {
             --primary: #ff4da6;
@@ -195,17 +200,53 @@
             opacity: 0.9;
         }
 
+        /* Enhanced Filter Section */
         .filter-section {
-            margin-bottom: 1.5rem;
+            background: var(--glass-bg);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            backdrop-filter: blur(10px);
+            border: var(--glass-border);
+            box-shadow: var(--shadow);
         }
 
-        .filter-section h3 {
-            margin-bottom: 0.8rem;
-            font-size: 1rem;
-            color: var(--text-light);
+        .filter-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.8rem;
         }
 
-        select, input {
+        .filter-option {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.8rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.9rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .filter-option:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .filter-option.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary-dark);
+        }
+
+        .filter-option i {
+            font-size: 0.9rem;
+        }
+
+        select,
+        input {
             width: 100%;
             padding: 0.8rem 1rem;
             border-radius: 10px;
@@ -218,7 +259,8 @@
             box-shadow: var(--shadow);
         }
 
-        select:focus, input:focus {
+        select:focus,
+        input:focus {
             outline: none;
             border-color: var(--primary);
             box-shadow: 0 0 0 2px rgba(255, 77, 166, 0.2);
@@ -256,25 +298,60 @@
             border-bottom: none;
         }
 
+        /* Enhanced Recent Reports */
         .recent-reports {
+            background: var(--glass-bg);
+            border-radius: 12px;
+            padding: 1.2rem;
             margin-top: 1.5rem;
+            backdrop-filter: blur(10px);
+            border: var(--glass-border);
+            box-shadow: var(--shadow);
+        }
+
+        .recent-reports h2 {
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        #recentReportsList {
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+        }
+
+        /* Scrollbar styling */
+        #recentReportsList::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #recentReportsList::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 3px;
+        }
+
+        #recentReportsList::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 3px;
         }
 
         .report-card {
-            background: var(--glass-bg);
-            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
             padding: 1rem;
-            margin-bottom: 1rem;
-            box-shadow: var(--shadow);
+            margin-bottom: 0.8rem;
             transition: var(--transition);
             animation: fadeInUp 0.5s ease;
-            border-left: 4px solid var(--primary);
+            border-left: 3px solid var(--primary);
             backdrop-filter: blur(5px);
         }
 
         .report-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            transform: translateY(-3px);
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         }
 
         .report-header {
@@ -286,25 +363,33 @@
 
         .report-type {
             font-weight: 600;
-            color: var(--primary);
             font-size: 0.9rem;
             display: flex;
             align-items: center;
-            gap: 0.3rem;
+            gap: 0.5rem;
         }
 
         .report-time {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             color: var(--text-light);
+            background: rgba(0, 0, 0, 0.2);
+            padding: 0.2rem 0.5rem;
+            border-radius: 10px;
         }
 
         .report-desc {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             margin-bottom: 0.5rem;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-clamp: 2;
+            -webkit-line-clamp: 2;
         }
 
         .report-location {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             color: var(--text-light);
             display: flex;
             align-items: center;
@@ -512,8 +597,13 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
         }
 
         @keyframes fadeInDown {
@@ -521,6 +611,7 @@
                 opacity: 0;
                 transform: translateY(-20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -532,6 +623,7 @@
                 opacity: 0;
                 transform: translateY(20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -543,6 +635,7 @@
                 opacity: 0;
                 transform: translateX(-20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateX(0);
@@ -554,6 +647,7 @@
                 opacity: 0;
                 transform: translateX(20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateX(0);
@@ -561,9 +655,17 @@
         }
 
         @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(255, 77, 166, 0.7); }
-            70% { box-shadow: 0 0 0 15px rgba(255, 77, 166, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(255, 77, 166, 0); }
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 77, 166, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 15px rgba(255, 77, 166, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 77, 166, 0);
+            }
         }
 
         .leaflet-container {
@@ -594,26 +696,6 @@
             border: var(--glass-border);
         }
 
-        .harassment-marker {
-            background-color: var(--danger);
-            border: 2px solid white;
-        }
-
-        .dark-area-marker {
-            background-color: var(--warning);
-            border: 2px solid white;
-        }
-
-        .broken-road-marker {
-            background-color: #3498db;
-            border: 2px solid white;
-        }
-
-        .unsafe-crowd-marker {
-            background-color: #9b59b6;
-            border: 2px solid white;
-        }
-
         .route-options {
             background: var(--glass-bg);
             position: absolute;
@@ -638,9 +720,20 @@
             margin-left: 0.5rem;
         }
 
-        .score-safe { background: var(--safe); color: white; }
-        .score-medium { background: var(--warning); color: black; }
-        .score-danger { background: var(--danger); color: white; }
+        .score-safe {
+            background: var(--safe);
+            color: white;
+        }
+
+        .score-medium {
+            background: var(--warning);
+            color: black;
+        }
+
+        .score-danger {
+            background: var(--danger);
+            color: white;
+        }
 
         .emergency-panel {
             position: fixed;
@@ -714,7 +807,9 @@
         }
 
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         .hidden {
@@ -795,10 +890,170 @@
             background: rgba(255, 77, 166, 0.1) !important;
         }
 
+        /* Custom Marker Styles */
+        .custom-marker {
+            background: none;
+            border: none;
+        }
+
+        .marker-emoji {
+            font-size: 1.5rem;
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+            transition: transform 0.2s ease;
+        }
+
+        .marker-emoji:hover {
+            transform: scale(1.2);
+        }
+
+        /* User Location Marker Styles */
+        .user-location-marker {
+            background: none;
+            border: none;
+        }
+
+        .user-location-icon {
+            font-size: 1.5rem;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+            position: relative;
+            z-index: 2;
+        }
+
+        .pulse-dot {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: rgba(76, 175, 80, 0.6);
+            border-radius: 50%;
+            z-index: 1;
+            animation: pulse 2s infinite;
+            transform: translate(-50%, -50%);
+            left: 50%;
+            top: 50%;
+        }
+
+        /* New styles for PWA install banner */
+        .pwa-install-banner {
+            position: fixed;
+            bottom: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: var(--glass-border);
+            padding: 1rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            max-width: 90%;
+            animation: slideInUp 0.5s ease;
+        }
+
+        .pwa-install-banner.hidden {
+            display: none;
+        }
+
+        .pwa-install-banner .logo {
+            font-size: 1.5rem;
+        }
+
+        .pwa-install-banner .close-btn {
+            background: none;
+            border: none;
+            color: var(--text-light);
+            font-size: 1.2rem;
+            cursor: pointer;
+            margin-left: auto;
+        }
+
+        /* New styles for clear reports button */
+        .clear-reports-btn {
+            background: var(--danger);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-top: 1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .clear-reports-btn:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+
+        /* New styles for highlighted marker */
+        .highlighted-marker {
+            animation: highlightPulse 1.5s infinite;
+        }
+
+        @keyframes highlightPulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.3);
+                opacity: 0.8;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Marker cluster styles */
+        .marker-cluster-small {
+            background-color: rgba(255, 77, 166, 0.6) !important;
+        }
+
+        .marker-cluster-small div {
+            background-color: rgba(255, 77, 166, 0.8) !important;
+        }
+
+        .marker-cluster-medium {
+            background-color: rgba(231, 76, 60, 0.6) !important;
+        }
+
+        .marker-cluster-medium div {
+            background-color: rgba(231, 76, 60, 0.8) !important;
+        }
+
+        .marker-cluster-large {
+            background-color: rgba(243, 156, 18, 0.6) !important;
+        }
+
+        .marker-cluster-large div {
+            background-color: rgba(243, 156, 18, 0.8) !important;
+        }
+
+        /* Marker tooltip styles */
+        .marker-tooltip {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: var(--glass-border);
+            border-radius: 8px;
+            padding: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--text);
+            box-shadow: var(--shadow);
+        }
+
         @media (max-width: 992px) {
             .container {
                 grid-template-columns: 1fr;
             }
+
             .sidebar {
                 position: fixed;
                 top: 82px;
@@ -807,12 +1062,15 @@
                 height: calc(100vh - 82px);
                 transition: left 0.3s ease;
             }
+
             .sidebar.active {
                 left: 0;
             }
+
             .map-section {
                 grid-column: 1;
             }
+
             .menu-toggle {
                 display: flex;
             }
@@ -823,24 +1081,24 @@
                 flex-direction: column;
                 gap: 1rem;
             }
-            
+
             .logo {
                 font-size: 1.5rem;
             }
-            
+
             .container {
                 grid-template-columns: 1fr;
                 padding: 1rem;
             }
-            
+
             .sidebar {
                 order: 2;
             }
-            
+
             .map-section {
                 height: 400px;
             }
-            
+
             #reportBtn {
                 width: 50px;
                 height: 50px;
@@ -848,9 +1106,16 @@
                 bottom: 1rem;
                 right: 1rem;
             }
+
+            .pwa-install-banner {
+                flex-direction: column;
+                text-align: center;
+                width: 90%;
+            }
         }
     </style>
 </head>
+
 <body>
     <div class="loading-screen" id="loadingScreen">
         <div class="spinner"></div>
@@ -888,6 +1153,9 @@
                         <div class="stat-label">Resolved</div>
                     </div>
                 </div>
+                <div class="clear-reports-btn" id="clearReportsBtn">
+                    <i class="fas fa-trash-alt"></i> Clear All Reports
+                </div>
             </div>
 
             <div class="route-controls">
@@ -917,14 +1185,24 @@
             </div>
 
             <div class="filter-section">
-                <h3><i class="fas fa-filter"></i> Filter Reports</h3>
-                <select id="filterType">
-                    <option value="All">All Hazards</option>
-                    <option value="Harassment">Harassment</option>
-                    <option value="Dark Area">Dark Area</option>
-                    <option value="Broken Road">Broken Road</option>
-                    <option value="Unsafe Crowd">Unsafe Crowd</option>
-                </select>
+                <h3><i class="fas fa-filter"></i> Filter Hazards</h3>
+                <div class="filter-options">
+                    <div class="filter-option active" data-type="All">
+                        <i class="fas fa-layer-group"></i> All
+                    </div>
+                    <div class="filter-option active" data-type="Harassment">
+                        <i class="fas fa-exclamation-triangle"></i> Harassment
+                    </div>
+                    <div class="filter-option active" data-type="Dark Area">
+                        <i class="fas fa-moon"></i> Dark Area
+                    </div>
+                    <div class="filter-option active" data-type="Broken Road">
+                        <i class="fas fa-road"></i> Broken Road
+                    </div>
+                    <div class="filter-option active" data-type="Unsafe Crowd">
+                        <i class="fas fa-users"></i> Crowd
+                    </div>
+                </div>
             </div>
 
             <div class="filter-section">
@@ -948,7 +1226,7 @@
 
         <main class="map-section">
             <div id="map"></div>
-            
+
             <div class="route-options hidden" id="routeOptions">
                 <h3><i class="fas fa-route"></i> Route Options</h3>
                 <div id="routeDetails"></div>
@@ -969,7 +1247,8 @@
                 <button class="emergency-btn" style="background: var(--police)" id="findPolice" title="Nearest Police">
                     <i class="fas fa-shield-alt"></i>
                 </button>
-                <button class="emergency-btn" style="background: var(--hospital)" id="findHospital" title="Nearest Hospital">
+                <button class="emergency-btn" style="background: var(--hospital)" id="findHospital"
+                    title="Nearest Hospital">
                     <i class="fas fa-hospital"></i>
                 </button>
             </div>
@@ -979,6 +1258,21 @@
     <button id="reportBtn" title="Report Danger">
         <i class="fas fa-plus"></i>
     </button>
+
+    <!-- PWA Install Banner -->
+    <div class="pwa-install-banner hidden" id="pwaInstallBanner">
+        <div class="logo">
+            <i class="fas fa-shield-alt"></i>
+            <span>SafeScape</span>
+        </div>
+        <p>Install SafeScape for a better experience</p>
+        <button class="btn btn-primary" id="installPWA">
+            <i class="fas fa-download"></i> Install
+        </button>
+        <button class="close-btn" id="closePwaBanner">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
 
     <div id="reportModal">
         <div class="modal-content">
@@ -999,7 +1293,8 @@
             </div>
             <div class="form-group">
                 <label for="dangerDesc">Description (Optional)</label>
-                <textarea id="dangerDesc" class="form-control" placeholder="Provide more details about the hazard..."></textarea>
+                <textarea id="dangerDesc" class="form-control"
+                    placeholder="Provide more details about the hazard..."></textarea>
             </div>
             <div class="form-group">
                 <label for="dangerSeverity">Severity Level</label>
@@ -1026,9 +1321,11 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/leaflet-geosearch@3.0.0/dist/geosearch.umd.js"></script>
+    <!-- Add Leaflet.markercluster plugin -->
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
     <script>
         // SafeScape Pro Application
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             // Hide loading screen after everything loads
             setTimeout(() => {
                 document.getElementById('loadingScreen').style.opacity = '0';
@@ -1044,18 +1341,31 @@
                 document.getElementById('themeToggle').innerHTML = '<i class="fas fa-sun"></i>';
             }
 
+            // Initialize map with a more reliable view
             const map = L.map('map', {
                 zoomControl: false,
-                preferCanvas: true
-            }).setView([20.5937, 78.9629], 13);
+                preferCanvas: true,
+                // Add these options for better mobile experience
+                tap: false,
+                touchZoom: true,
+                scrollWheelZoom: true,
+                doubleClickZoom: true
+            }).setView([20.5937, 78.9629], 5); // Start with wider view of India
 
             // Tile layers with theme support
             const lightTiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+                // Add these options for better mobile performance
+                detectRetina: true,
+                maxZoom: 19,
+                minZoom: 2
             });
 
             const darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+                detectRetina: true,
+                maxZoom: 19,
+                minZoom: 2
             });
 
             // Set initial tile layer
@@ -1068,6 +1378,17 @@
             // Initialize GeoSearch provider
             const searchProvider = new GeoSearch.OpenStreetMapProvider();
 
+            // Initialize marker cluster group
+            const markerClusterGroup = L.markerClusterGroup({
+                spiderfyOnMaxZoom: true,
+                showCoverageOnHover: false,
+                zoomToBoundsOnClick: true,
+                maxClusterRadius: 80
+            });
+
+            // Add cluster group to map
+            map.addLayer(markerClusterGroup);
+
             // App State
             let userLocation = null;
             let selectedLatLng = null;
@@ -1077,6 +1398,8 @@
             let currentRoute = null;
             let routingControl = null;
             let searchTimeout = null;
+            let latestReportMarker = null;
+            let highlightedMarkerTimeout = null;
 
             // Danger zones data
             const dangerZones = [
@@ -1101,6 +1424,10 @@
 
             // Initialize markers and features
             function initializeMapFeatures() {
+                // Clear existing markers if any
+                markerClusterGroup.clearLayers();
+                allMarkers = [];
+
                 // Add default danger zones
                 dangerZones.forEach(zone => {
                     addMarker(zone.lat, zone.lng, zone.type, zone.desc, zone.severity, zone.timestamp);
@@ -1137,24 +1464,28 @@
                 updateStats();
             }
 
-            // Add marker to map
+            // Add marker to map with clustering
             function addMarker(lat, lng, type, desc, severity, timestamp) {
-                const markerOptions = {
+                const iconHtml = {
+                    'Harassment': '🚨',
+                    'Dark Area': '🌑',
+                    'Broken Road': '⚠️',
+                    'Unsafe Crowd': '🧟'
+                }[type] || '📍';
+
+                const marker = L.marker([lat, lng], {
+                    icon: L.divIcon({
+                        className: 'custom-marker',
+                        html: `<div class="marker-emoji">${iconHtml}</div>`,
+                        iconSize: [30, 30],
+                        popupAnchor: [0, -15]
+                    }),
                     customType: type,
                     severity: severity,
-                    timestamp: timestamp || new Date().toISOString(),
-                    className: `${type.toLowerCase().replace(' ', '-')}-marker`
-                };
-
-                const marker = L.circleMarker([lat, lng], {
-                    radius: getMarkerSize(severity),
-                    color: getMarkerColor(type),
-                    fillColor: getMarkerColor(type),
-                    fillOpacity: 0.9,
-                    ...markerOptions
+                    timestamp: timestamp || new Date().toISOString()
                 });
 
-                const dateStr = new Date(markerOptions.timestamp).toLocaleString();
+                const dateStr = new Date(marker.options.timestamp).toLocaleString();
                 const popupContent = `
                     <div class="marker-popup">
                         <h3>${type}</h3>
@@ -1165,37 +1496,76 @@
                 `;
 
                 marker.bindPopup(popupContent);
-                marker.addTo(map);
+
+                // Add tooltip for hover preview
+                marker.bindTooltip(`
+                    <div class="marker-tooltip">
+                        <strong>${type}</strong><br>
+                        ${desc ? desc.substring(0, 30) + (desc.length > 30 ? '...' : '') : 'No description'}
+                    </div>
+                `, {
+                    permanent: false,
+                    direction: 'top',
+                    className: 'marker-tooltip'
+                });
+
+                // Add to cluster group instead of directly to map
+                markerClusterGroup.addLayer(marker);
                 allMarkers.push(marker);
 
                 return marker;
             }
 
-            // Get marker color based on type
-            function getMarkerColor(type) {
-                const colors = {
-                    'Harassment': '#e74c3c',
-                    'Dark Area': '#f39c12',
-                    'Broken Road': '#3498db',
-                    'Unsafe Crowd': '#9b59b6'
-                };
-                return colors[type] || '#ff4da6';
+            // Highlight a marker (for new reports)
+            function highlightMarker(marker) {
+                // Remove previous highlight if any
+                if (latestReportMarker) {
+                    latestReportMarker.getElement().classList.remove('highlighted-marker');
+                }
+
+                // Clear any existing timeout
+                if (highlightedMarkerTimeout) {
+                    clearTimeout(highlightedMarkerTimeout);
+                }
+
+                // Add highlight class and store reference
+                marker.getElement().classList.add('highlighted-marker');
+                latestReportMarker = marker;
+
+                // Set timeout to remove highlight after 10 seconds
+                highlightedMarkerTimeout = setTimeout(() => {
+                    if (marker.getElement()) {
+                        marker.getElement().classList.remove('highlighted-marker');
+                    }
+                    latestReportMarker = null;
+                }, 10000);
             }
 
-            // Get marker size based on severity
-            function getMarkerSize(severity) {
-                const sizes = {
-                    'Low': 5,
-                    'Medium': 7,
-                    'High': 9,
-                    'Critical': 11
-                };
-                return sizes[severity] || 6;
+            // Clear all reports from local storage and reset map
+            function clearAllReports() {
+                if (confirm("Are you sure you want to delete all reports? This cannot be undone.")) {
+                    localStorage.removeItem('safescapeReports');
+                    initializeMapFeatures();
+                    showToast("All reports have been cleared", "success");
+                }
             }
 
-            // Locate user
+            // Locate user with improved reliability
             function locateUser() {
+                if (!map) {
+                    console.error("Map not initialized yet");
+                    return;
+                }
+
+                showLoading("Finding your location...");
+
                 if ("geolocation" in navigator) {
+                    const geoOptions = {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    };
+
                     navigator.geolocation.getCurrentPosition(
                         (position) => {
                             userLocation = {
@@ -1203,34 +1573,59 @@
                                 lng: position.coords.longitude
                             };
 
-                            // Add or update user marker
+                            console.log("User location found:", userLocation);
+
+                            // Remove previous user marker if exists
                             if (window.userMarker) {
-                                window.userMarker.setLatLng(userLocation);
-                            } else {
-                                window.userMarker = L.circleMarker(userLocation, {
-                                    radius: 8,
-                                    color: "#4CAF50",
-                                    fillColor: "#4CAF50",
-                                    fillOpacity: 0.9,
-                                    className: 'user-marker'
-                                })
-                                .addTo(map)
-                                .bindPopup("📍 You are here")
-                                .openPopup();
+                                map.removeLayer(window.userMarker);
                             }
 
-                            map.setView(userLocation, 15);
-                            updateNearbyReports();
+                            // Create new user marker with pulse effect
+                            window.userMarker = L.marker(userLocation, {
+                                icon: L.divIcon({
+                                    className: 'user-location-marker',
+                                    html: '<div class="pulse-dot"></div><div class="user-location-icon">📍</div>',
+                                    iconSize: [30, 30],
+                                    popupAnchor: [0, -15]
+                                }),
+                                zIndexOffset: 1000
+                            }).addTo(map)
+                                .bindPopup("You are here")
+                                .openPopup();
+
+                            // Fly to user location with smooth animation
+                            map.flyTo(userLocation, 15, {
+                                duration: 1,
+                                easeLinearity: 0.25
+                            });
+
+                            // Update UI
                             document.getElementById('startPoint').value = "Current Location";
+                            updateNearbyReports();
+                            hideLoading();
                         },
                         (error) => {
-                            showToast("Location access denied. Using default view.", "error");
-                            console.warn("Location access denied:", error);
+                            console.error("Geolocation error:", error);
+                            hideLoading();
+
+                            let errorMsg = "Location access denied";
+                            if (error.code === error.TIMEOUT) {
+                                errorMsg = "Location request timed out";
+                            } else if (error.code === error.POSITION_UNAVAILABLE) {
+                                errorMsg = "Location unavailable";
+                            }
+
+                            showToast(`${errorMsg}. Using default view.`, "error");
+
+                            // Set a reasonable default view
+                            map.setView([20.5937, 78.9629], 5);
                         },
-                        { enableHighAccuracy: true, timeout: 10000 }
+                        geoOptions
                     );
                 } else {
-                    showToast("Geolocation is not supported by your browser", "error");
+                    hideLoading();
+                    showToast("Geolocation not supported by your browser", "error");
+                    map.setView([20.5937, 78.9629], 5);
                 }
             }
 
@@ -1246,11 +1641,11 @@
                     searchProvider.search({ query: query })
                         .then(results => {
                             const resultsHTML = results.map(result => `
-                                <div class="search-result-item" data-lat="${result.y}" data-lng="${result.x}">
-                                    <strong>${result.label.split(',')[0]}</strong>
-                                    <div class="text-sm">${result.label.split(',').slice(1).join(',')}</div>
-                                </div>
-                            `).join('');
+                                        <div class="search-result-item" data-lat="${result.y}" data-lng="${result.x}">
+                                            <strong>${result.label.split(',')[0]}</strong>
+                                            <div class="text-sm">${result.label.split(',').slice(1).join(',')}</div>
+                                        </div>
+                                    `).join('');
 
                             resultsContainer.innerHTML = resultsHTML;
                             resultsContainer.style.display = results.length ? 'block' : 'none';
@@ -1260,13 +1655,13 @@
                                 item.addEventListener('click', () => {
                                     const lat = parseFloat(item.getAttribute('data-lat'));
                                     const lng = parseFloat(item.getAttribute('data-lng'));
-                                    const input = resultsContainer.id === 'startResults' ? 
-                                        document.getElementById('startPoint') : 
+                                    const input = resultsContainer.id === 'startResults' ?
+                                        document.getElementById('startPoint') :
                                         document.getElementById('endPoint');
-                                    
+
                                     input.value = item.querySelector('strong').textContent;
                                     resultsContainer.style.display = 'none';
-                                    
+
                                     // Center map on selected location
                                     map.setView([lat, lng], 15);
                                 });
@@ -1285,39 +1680,37 @@
 
                 const distance = document.getElementById('distanceFilter').value;
                 if (distance === 'all') {
-                    allMarkers.forEach(marker => map.addLayer(marker));
+                    markerClusterGroup.addLayers(allMarkers);
                     return;
                 }
 
                 const maxDistance = parseInt(distance) * 1000; // Convert km to meters
+                const markersToShow = [];
 
                 allMarkers.forEach(marker => {
                     const markerPos = marker.getLatLng();
                     const distanceToUser = map.distance(userLocation, markerPos);
 
                     if (distanceToUser <= maxDistance) {
-                        map.addLayer(marker);
-                    } else {
-                        map.removeLayer(marker);
+                        markersToShow.push(marker);
                     }
                 });
+
+                markerClusterGroup.clearLayers();
+                markerClusterGroup.addLayers(markersToShow);
             }
 
             // Filter markers by type
             function filterMarkersByType() {
-                const selectedType = document.getElementById('filterType').value;
-                
-                allMarkers.forEach(marker => {
-                    if (selectedType === "All") {
-                        map.addLayer(marker);
-                    } else {
-                        if (marker.options.customType === selectedType) {
-                            map.addLayer(marker);
-                        } else {
-                            map.removeLayer(marker);
-                        }
-                    }
+                const activeFilters = Array.from(document.querySelectorAll('.filter-option.active'))
+                    .map(el => el.getAttribute('data-type'));
+
+                const markersToShow = allMarkers.filter(marker => {
+                    return activeFilters.includes("All") || activeFilters.includes(marker.options.customType);
                 });
+
+                markerClusterGroup.clearLayers();
+                markerClusterGroup.addLayers(markersToShow);
             }
 
             // Calculate safe route
@@ -1325,14 +1718,14 @@
                 const startInput = document.getElementById('startPoint').value;
                 const endInput = document.getElementById('endPoint').value;
                 const preference = document.getElementById('routePreference').value;
-                
+
                 if (!endInput) {
                     showToast('Please enter a destination', 'error');
                     return;
                 }
 
                 showLoading('Calculating safest route...');
-                
+
                 // Geocode the destination
                 searchProvider.search({ query: endInput })
                     .then(results => {
@@ -1388,17 +1781,17 @@
                 // Calculate midpoint for waypoints
                 const midLat = (start.lat + end.lat) / 2;
                 const midLng = (start.lng + end.lng) / 2;
-                
+
                 // Generate slightly different waypoints based on preference
                 const waypoints = [];
-                
+
                 if (preference === "safest") {
                     // Add police station near midpoint if available
-                    const nearestPolice = findNearestFeature({lat: midLat, lng: midLng}, policeStations);
+                    const nearestPolice = findNearestFeature({ lat: midLat, lng: midLng }, policeStations);
                     if (nearestPolice) {
                         waypoints.push(nearestPolice);
                     }
-                } 
+                }
                 else if (preference === "wellLit") {
                     // Add points along main roads (simulated)
                     waypoints.push({
@@ -1414,7 +1807,7 @@
                 // Calculate distance and time (simplified)
                 const distanceKm = (map.distance(start, end) / 1000).toFixed(1);
                 const baseTime = distanceKm * 15; // 15 minutes per km
-                
+
                 // Adjust based on preference
                 let time, safetyScore;
                 if (preference === "fastest") {
@@ -1448,17 +1841,17 @@
             function displayRouteOptions(route) {
                 const optionsPanel = document.getElementById('routeOptions');
                 const detailsContainer = document.getElementById('routeDetails');
-                
+
                 detailsContainer.innerHTML = `
-                    <div class="route-option">
-                        <h4>${route.name} <span class="safety-score ${getSafetyClass(route.safetyScore)}">${route.safetyScore}/10</span></h4>
-                        <p><i class="fas fa-clock"></i> ${route.time}</p>
-                        <p><i class="fas fa-walking"></i> ${route.distance}</p>
-                        <p><i class="fas fa-lightbulb"></i> ${route.lighting}% well-lit</p>
-                        <p><i class="fas fa-shield-alt"></i> ${route.policeStations} police stations nearby</p>
-                    </div>
-                `;
-                
+                            <div class="route-option">
+                                <h4>${route.name} <span class="safety-score ${getSafetyClass(route.safetyScore)}">${route.safetyScore}/10</span></h4>
+                                <p><i class="fas fa-clock"></i> ${route.time}</p>
+                                <p><i class="fas fa-walking"></i> ${route.distance}</p>
+                                <p><i class="fas fa-lightbulb"></i> ${route.lighting}% well-lit</p>
+                                <p><i class="fas fa-shield-alt"></i> ${route.policeStations} police stations nearby</p>
+                            </div>
+                        `;
+
                 optionsPanel.classList.remove('hidden');
                 optionsPanel.scrollIntoView({ behavior: 'smooth' });
 
@@ -1488,9 +1881,9 @@
                     draggableWaypoints: false,
                     fitSelectedRoutes: true,
                     lineOptions: {
-                        styles: [{ 
-                            color: '#4CAF50', 
-                            opacity: 0.8, 
+                        styles: [{
+                            color: '#4CAF50',
+                            opacity: 0.8,
                             weight: 5,
                             className: 'path-animation'
                         }]
@@ -1506,19 +1899,16 @@
             // Start navigation
             function startNavigation() {
                 if (!currentRoute) return;
-                
+
                 showToast(`Starting navigation on ${currentRoute.name}`, 'success');
                 document.getElementById('routeOptions').classList.add('hidden');
-                
+
                 // Zoom to show the entire route
                 const bounds = L.latLngBounds(
                     [currentRoute.start.lat, currentRoute.start.lng],
                     [currentRoute.end.lat, currentRoute.end.lng]
                 );
                 map.fitBounds(bounds, { padding: [50, 50] });
-                
-                // In a real app, you would start turn-by-turn navigation here
-                // This could include voice guidance, step-by-step instructions, etc.
             }
 
             // Find nearest police stations
@@ -1537,7 +1927,7 @@
                         userLocation,
                         { lat: station.lat, lng: station.lng }
                     );
-                    
+
                     if (distance < minDistance) {
                         minDistance = distance;
                         closestStation = station;
@@ -1547,15 +1937,15 @@
                 if (closestStation) {
                     const kmDistance = (minDistance / 1000).toFixed(1);
                     showToast(`Nearest police station: ${closestStation.name} (${kmDistance}km away)`, "success");
-                    
+
                     // Zoom to the police station
                     map.setView([closestStation.lat, closestStation.lng], 15);
-                    
+
                     // Show route to police station
                     if (routingControl) {
                         map.removeControl(routingControl);
                     }
-                    
+
                     routingControl = L.Routing.control({
                         waypoints: [
                             L.latLng(userLocation.lat, userLocation.lng),
@@ -1588,7 +1978,7 @@
                         userLocation,
                         { lat: hospital.lat, lng: hospital.lng }
                     );
-                    
+
                     if (distance < minDistance) {
                         minDistance = distance;
                         closestHospital = hospital;
@@ -1598,15 +1988,15 @@
                 if (closestHospital) {
                     const kmDistance = (minDistance / 1000).toFixed(1);
                     showToast(`Nearest hospital: ${closestHospital.name} (${kmDistance}km away)`, "success");
-                    
+
                     // Zoom to the hospital
                     map.setView([closestHospital.lat, closestHospital.lng], 15);
-                    
+
                     // Show route to hospital
                     if (routingControl) {
                         map.removeControl(routingControl);
                     }
-                    
+
                     routingControl = L.Routing.control({
                         waypoints: [
                             L.latLng(userLocation.lat, userLocation.lng),
@@ -1626,14 +2016,13 @@
             // Emergency SOS
             function emergencySOS() {
                 showToast("Emergency alert sent to nearby authorities!", "error");
-                // In a real app, this would send your location to emergency services
             }
 
             // Helper function to find nearest feature
             function findNearestFeature(location, features) {
                 let nearest = null;
                 let minDistance = Infinity;
-                
+
                 features.forEach(feature => {
                     const distance = map.distance(location, feature);
                     if (distance < minDistance && distance < 2000) { // Within 2km
@@ -1641,7 +2030,7 @@
                         nearest = feature;
                     }
                 });
-                
+
                 return nearest;
             }
 
@@ -1649,7 +2038,7 @@
             function updateRecentReportsList() {
                 const recentReportsList = document.getElementById('recentReportsList');
                 recentReportsList.innerHTML = '';
-                
+
                 const savedReports = JSON.parse(localStorage.getItem('safescapeReports') || '[]');
                 const allReports = [...dangerZones, ...savedReports]
                     .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
@@ -1661,21 +2050,21 @@
                     reportElement.innerHTML = `
                         <div class="report-header">
                             <span class="report-type" style="color: ${getMarkerColor(report.type)}">
-                                <i class="fas fa-${getReportIcon(report.type)}"></i> ${report.type}
+                                ${getReportEmoji(report.type)} ${report.type}
                             </span>
                             <span class="report-time">${formatTimeAgo(report.timestamp)}</span>
                         </div>
-                        <p class="report-desc">${report.desc || 'No description'}</p>
+                        <p class="report-desc">${report.desc || 'No description provided'}</p>
                         <p class="report-location">
                             <i class="fas fa-map-marker-alt"></i> 
                             ${report.lat.toFixed(4)}, ${report.lng.toFixed(4)}
                         </p>
                     `;
-                    
+
                     reportElement.addEventListener('click', () => {
                         map.setView([report.lat, report.lng], 16);
-                        const marker = allMarkers.find(m => 
-                            m.getLatLng().lat === report.lat && 
+                        const marker = allMarkers.find(m =>
+                            m.getLatLng().lat === report.lat &&
                             m.getLatLng().lng === report.lng
                         );
                         if (marker) marker.openPopup();
@@ -1683,6 +2072,27 @@
 
                     recentReportsList.appendChild(reportElement);
                 });
+            }
+
+            function getReportEmoji(type) {
+                const emojis = {
+                    'Harassment': '🚨',
+                    'Dark Area': '🌑',
+                    'Broken Road': '⚠️',
+                    'Unsafe Crowd': '🧟'
+                };
+                return emojis[type] || '📍';
+            }
+
+            // Get marker color based on type
+            function getMarkerColor(type) {
+                const colors = {
+                    'Harassment': '#e74c3c',
+                    'Dark Area': '#f39c12',
+                    'Broken Road': '#3498db',
+                    'Unsafe Crowd': '#9b59b6'
+                };
+                return colors[type] || '#ff4da6';
             }
 
             // Get icon for report type
@@ -1719,7 +2129,6 @@
             function updateStats() {
                 const savedReports = JSON.parse(localStorage.getItem('safescapeReports') || '[]');
                 document.getElementById('totalReports').textContent = savedReports.length + dangerZones.length;
-                // In a real app, you'd track resolved reports too
             }
 
             // Show loading state
@@ -1745,7 +2154,7 @@
                 toast.textContent = message;
                 toast.className = `toast ${type}`;
                 toast.classList.add('show');
-                
+
                 setTimeout(() => {
                     toast.classList.remove('show');
                 }, 3000);
@@ -1757,7 +2166,7 @@
                 document.body.style.overflow = 'hidden';
 
                 // Allow user to click on map to pick location
-                map.once('click', function(e) {
+                map.once('click', function (e) {
                     selectedLatLng = e.latlng;
 
                     // Remove previous temp marker if exists
@@ -1810,7 +2219,10 @@
                 const timestamp = new Date().toISOString();
 
                 // Add marker to map
-                addMarker(selectedLatLng.lat, selectedLatLng.lng, type, desc, severity, timestamp);
+                const newMarker = addMarker(selectedLatLng.lat, selectedLatLng.lng, type, desc, severity, timestamp);
+
+                // Highlight the new marker
+                highlightMarker(newMarker);
 
                 // Save to local storage
                 saveToLocal(type, desc, selectedLatLng.lat, selectedLatLng.lng, severity, timestamp);
@@ -1828,7 +2240,7 @@
                 const newReport = { type, desc, lat, lng, severity, timestamp };
                 existing.push(newReport);
                 localStorage.setItem('safescapeReports', JSON.stringify(existing));
-                
+
                 // Update recent reports list
                 updateRecentReportsList();
             }
@@ -1838,7 +2250,7 @@
                 currentTheme = currentTheme === 'light' ? 'dark' : 'light';
                 document.body.classList.toggle('dark-mode');
                 localStorage.setItem('theme', currentTheme);
-                
+
                 // Update map tiles
                 if (currentTheme === 'dark') {
                     map.removeLayer(lightTiles);
@@ -1847,7 +2259,7 @@
                     map.removeLayer(darkTiles);
                     lightTiles.addTo(map);
                 }
-                
+
                 // Update icon
                 document.getElementById('themeToggle').innerHTML = currentTheme === 'dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
             }
@@ -1857,49 +2269,122 @@
                 document.getElementById('sidebar').classList.toggle('active');
             }
 
+            // PWA Installation Prompt
+            function initializePWA() {
+                let deferredPrompt;
+
+                // Listen for beforeinstallprompt event
+                window.addEventListener('beforeinstallprompt', (e) => {
+                    // Prevent the mini-infobar from appearing on mobile
+                    e.preventDefault();
+                    // Stash the event so it can be triggered later
+                    deferredPrompt = e;
+                    // Show the install banner
+                    const pwaBanner = document.getElementById('pwaInstallBanner');
+                    pwaBanner.classList.remove('hidden');
+
+                    // Handle install button click
+                    document.getElementById('installPWA').addEventListener('click', () => {
+                        // Hide the banner
+                        pwaBanner.classList.add('hidden');
+                        // Show the install prompt
+                        deferredPrompt.prompt();
+                        // Wait for the user to respond to the prompt
+                        deferredPrompt.userChoice.then((choiceResult) => {
+                            if (choiceResult.outcome === 'accepted') {
+                                console.log('User accepted the install prompt');
+                            } else {
+                                console.log('User dismissed the install prompt');
+                            }
+                            deferredPrompt = null;
+                        });
+                    });
+
+                    // Handle close button click
+                    document.getElementById('closePwaBanner').addEventListener('click', () => {
+                        pwaBanner.classList.add('hidden');
+                    });
+                });
+
+                // Track app installed event
+                window.addEventListener('appinstalled', () => {
+                    console.log('PWA was installed');
+                    document.getElementById('pwaInstallBanner').classList.add('hidden');
+                });
+            }
+
             // Initialize all features
             function initializeApp() {
-                initializeMapFeatures();
-                
-                // Set up event listeners
-                document.getElementById('themeToggle').addEventListener('click', toggleTheme);
-                document.getElementById('menuToggle').addEventListener('click', toggleSidebar);
-                document.getElementById('reportBtn').addEventListener('click', openReportModal);
-                document.getElementById('closeModal').addEventListener('click', closeReportModal);
-                document.getElementById('cancelReport').addEventListener('click', closeReportModal);
-                document.getElementById('submitReport').addEventListener('click', submitNewReport);
-                document.getElementById('filterType').addEventListener('change', filterMarkersByType);
-                document.getElementById('distanceFilter').addEventListener('change', updateNearbyReports);
-                document.getElementById('calculateRoute').addEventListener('click', calculateSafeRoute);
-                document.getElementById('startNavigation').addEventListener('click', startNavigation);
-                document.getElementById('closeRouteOptions').addEventListener('click', () => {
-                    document.getElementById('routeOptions').classList.add('hidden');
-                });
-                document.getElementById('emergencySOS').addEventListener('click', emergencySOS);
-                document.getElementById('findPolice').addEventListener('click', findNearestPolice);
-                document.getElementById('findHospital').addEventListener('click', findNearestHospital);
+                try {
+                    initializeMapFeatures();
+                    initializePWA();
 
-                // Search input handlers
-                document.getElementById('startPoint').addEventListener('input', (e) => {
-                    if (e.target.value !== "Current Location") {
-                        searchLocations(e.target.value, document.getElementById('startResults'));
-                    }
-                });
+                    // Set up event listeners
+                    document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+                    document.getElementById('menuToggle').addEventListener('click', toggleSidebar);
+                    document.getElementById('reportBtn').addEventListener('click', openReportModal);
+                    document.getElementById('closeModal').addEventListener('click', closeReportModal);
+                    document.getElementById('cancelReport').addEventListener('click', closeReportModal);
+                    document.getElementById('submitReport').addEventListener('click', submitNewReport);
+                    document.getElementById('distanceFilter').addEventListener('change', updateNearbyReports);
+                    document.getElementById('calculateRoute').addEventListener('click', calculateSafeRoute);
+                    document.getElementById('startNavigation').addEventListener('click', startNavigation);
+                    document.getElementById('closeRouteOptions').addEventListener('click', () => {
+                        document.getElementById('routeOptions').classList.add('hidden');
+                    });
+                    document.getElementById('emergencySOS').addEventListener('click', emergencySOS);
+                    document.getElementById('findPolice').addEventListener('click', findNearestPolice);
+                    document.getElementById('findHospital').addEventListener('click', findNearestHospital);
+                    document.getElementById('clearReportsBtn').addEventListener('click', clearAllReports);
 
-                document.getElementById('endPoint').addEventListener('input', (e) => {
-                    searchLocations(e.target.value, document.getElementById('endResults'));
-                });
+                    // Filter options event listeners
+                    document.querySelectorAll('.filter-option').forEach(option => {
+                        option.addEventListener('click', function () {
+                            if (this.getAttribute('data-type') === "All") {
+                                // Toggle all filters
+                                const allActive = this.classList.contains('active');
+                                document.querySelectorAll('.filter-option').forEach(opt => {
+                                    opt.classList.toggle('active', !allActive);
+                                });
+                            } else {
+                                this.classList.toggle('active');
+                                // If no filters are selected, select "All"
+                                const anyActive = Array.from(document.querySelectorAll('.filter-option:not([data-type="All"]'))
+                                    .some(el => el.classList.contains('active'));
+                                document.querySelector('.filter-option[data-type="All"]').classList.toggle('active', !anyActive);
+                            }
+                            filterMarkersByType();
+                        });
+                    });
 
-                // Close search results when clicking elsewhere
-                document.addEventListener('click', (e) => {
-                    if (!e.target.closest('.search-container')) {
-                        document.getElementById('startResults').style.display = 'none';
-                        document.getElementById('endResults').style.display = 'none';
-                    }
-                });
+                    // Search input handlers
+                    document.getElementById('startPoint').addEventListener('input', (e) => {
+                        if (e.target.value !== "Current Location") {
+                            searchLocations(e.target.value, document.getElementById('startResults'));
+                        }
+                    });
 
-                // Try to locate user
-                locateUser();
+                    document.getElementById('endPoint').addEventListener('input', (e) => {
+                        searchLocations(e.target.value, document.getElementById('endResults'));
+                    });
+
+                    // Close search results when clicking elsewhere
+                    document.addEventListener('click', (e) => {
+                        if (!e.target.closest('.search-container')) {
+                            document.getElementById('startResults').style.display = 'none';
+                            document.getElementById('endResults').style.display = 'none';
+                        }
+                    });
+
+                    // Try to locate user - now with a small delay to ensure map is fully initialized
+                    setTimeout(() => {
+                        locateUser();
+                    }, 500);
+
+                } catch (error) {
+                    console.error("Initialization error:", error);
+                    showToast("App initialization failed. Please refresh.", "error");
+                }
             }
 
             // Start the app
@@ -1907,4 +2392,5 @@
         });
     </script>
 </body>
+
 </html>

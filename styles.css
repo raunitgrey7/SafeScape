@@ -1,0 +1,10 @@
+ .report-desc {
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-clamp: 2;
+            -webkit-line-clamp: 2;
+        }
